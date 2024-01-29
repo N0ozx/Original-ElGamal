@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "basic_elgamal2/1.0.0": {
+        "runtime": {
+          "basic_elgamal2.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "basic_elgamal2/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
