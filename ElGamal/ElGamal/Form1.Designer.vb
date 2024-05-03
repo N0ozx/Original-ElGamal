@@ -30,11 +30,11 @@ Partial Class Form1
         ' 
         ' ElGamal
         ' 
-        ElGamal.BackColor = Color.DimGray
+        ElGamal.BackColor = Color.Black
         ElGamal.FlatStyle = FlatStyle.Flat
         ElGamal.Font = New Font("Sylfaen", 12F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
         ElGamal.ForeColor = SystemColors.Control
-        ElGamal.Location = New Point(276, 125)
+        ElGamal.Location = New Point(276, 136)
         ElGamal.Name = "ElGamal"
         ElGamal.Size = New Size(148, 37)
         ElGamal.TabIndex = 0
@@ -43,11 +43,11 @@ Partial Class Form1
         ' 
         ' Exit1
         ' 
-        Exit1.BackColor = Color.DimGray
+        Exit1.BackColor = Color.Black
         Exit1.FlatStyle = FlatStyle.Flat
         Exit1.Font = New Font("Sylfaen", 12F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
         Exit1.ForeColor = SystemColors.ControlLight
-        Exit1.Location = New Point(318, 318)
+        Exit1.Location = New Point(317, 297)
         Exit1.Name = "Exit1"
         Exit1.Size = New Size(70, 31)
         Exit1.TabIndex = 1
@@ -56,11 +56,11 @@ Partial Class Form1
         ' 
         ' Button1
         ' 
-        Button1.BackColor = Color.DimGray
+        Button1.BackColor = Color.Black
         Button1.FlatStyle = FlatStyle.Flat
         Button1.Font = New Font("Sylfaen", 12F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
         Button1.ForeColor = SystemColors.ControlLight
-        Button1.Location = New Point(276, 168)
+        Button1.Location = New Point(276, 179)
         Button1.Name = "Button1"
         Button1.Size = New Size(148, 37)
         Button1.TabIndex = 2

@@ -2,7 +2,6 @@
 Imports System.Media
 Imports System.Numerics
 Imports System.Security.Cryptography
-
 Public Class Form4
 
     Private originalImage As Bitmap
@@ -10,7 +9,12 @@ Public Class Form4
     Private decryptedImage As Bitmap
     '//////////////////////////////////////////////
     Private e, p, g, privateKey As BigInteger
+    Dim desiredLength As BigInteger
     Private Bp As New List(Of BigInteger)()
+
+    Private Sub Form4_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Stats.Enabled = False
+    End Sub
     Private Sub Load_image_Click(sender As Object, e As EventArgs) Handles Load_image.Click
         Dim openFileDialog As New OpenFileDialog With {
           .Filter = "Image|*.bmp;*.jpg;*.png;*.gif;*.tif|All files|*.*"
@@ -20,7 +24,6 @@ Public Class Form4
             Dim filePath As String = openFileDialog.FileName
             originalImage = New Bitmap(filePath)
             PictureBox1.Image = originalImage
-            SaveImage(originalImage)
 
         End If
     End Sub
@@ -46,17 +49,34 @@ Public Class Form4
                 Encrypt.Enabled = False
                 Decrypt.Enabled = False
                 Back.Enabled = False
-                Stats.Enabled = False
-                Await Task.Run(Sub()
 
+                Dim elapsedTime As TimeSpan
+                Dim stopwatch As New Stopwatch()
+                Dim selectedFunction As Func(Of BigInteger) = Nothing
+
+
+                Select Case ComboBox1.SelectedIndex
+                    Case 0
+                        selectedFunction = Function() GenerateRandomInteger(p)
+                        desiredLength = originalImage.Width * originalImage.Height * 3
+                    Case 1
+                        selectedFunction = Function() GenerateRandomnumber(p)
+                        desiredLength = originalImage.Width * originalImage.Height
+                End Select
+
+
+
+                stopwatch.Start()
                                    processedImage = New Bitmap(originalImage.Width, originalImage.Height)
                                    processedImage.SetResolution(originalImage.HorizontalResolution, originalImage.VerticalResolution)
 
-                                   Dim desiredLength As Integer = originalImage.Width * originalImage.Height * 3
-                                   Dim Fsk As New List(Of Byte)()
-                                   Do While Fsk.Count < desiredLength
 
-                                       Dim randomInteger As BigInteger = GenerateRandomInteger(p)
+                Dim Fsk As New List(Of Byte)()
+                Await Task.Run(Sub()
+
+
+                                   Do While Fsk.Count < desiredLength
+                                       Dim randomInteger As BigInteger = selectedFunction()
 
                                        Dim c1 As BigInteger = BigInteger.ModPow(g, randomInteger, p)
 
@@ -73,9 +93,9 @@ Public Class Form4
                                            End If
                                            Fsk.Add(byteValue)
                                        Next
-                                       Dim progressPercentage As Integer = (Fsk.Count / desiredLength) * 100
+
                                        Invoke(Sub()
-                                                  Label6.Text = $"Encrypting... {progressPercentage}%"
+                                                  Label6.Text = $"Encrypting..."
                                               End Sub)
                                        ' Stop processing if Fsk has reached the desired length
 
@@ -83,44 +103,72 @@ Public Class Form4
                                            Exit Do
                                        End If
                                    Loop
+                                   Invoke(Sub()
+                                              If ComboBox1.SelectedIndex = 1 Then
+                                                  Dim byteIndex As Integer = 0
+                                                  For x As Integer = 0 To originalImage.Width - 1
+                                                      For y As Integer = 0 To originalImage.Height - 1
 
-                                   Dim byteIndex As Integer = 0
-                                   For x As Integer = 0 To originalImage.Width - 1
-                                       For y As Integer = 0 To originalImage.Height - 1
+                                                          Dim originalColor As Color = originalImage.GetPixel(x, y)
 
-                                           Dim originalColor As Color = originalImage.GetPixel(x, y)
-
-                                           ' XOR each color channel with the corresponding byte from the random array
-                                           Dim processedColor As Color = Color.FromArgb(
+                                                          ' XOR each color channel with the corresponding byte from the random array
+                                                          Dim processedColor As Color = Color.FromArgb(
                                                originalColor.R Xor Fsk(byteIndex),
-                                               originalColor.G Xor Fsk(byteIndex + 1),
-                                               originalColor.B Xor Fsk(byteIndex + 2)
+                                               originalColor.G Xor Fsk(byteIndex),
+                                               originalColor.B Xor Fsk(byteIndex)
                                                      )
 
-                                           ' Set the processed pixel color in the new image
-                                           processedImage.SetPixel(x, y, processedColor)
+                                                          ' Set the processed pixel color in the new image
+                                                          processedImage.SetPixel(x, y, processedColor)
 
-                                           ' Move to the next set of bytes
-                                           byteIndex += 3
-                                       Next
-                                   Next
-                                   Fsk.Clear()
+                                                          ' Move to the next set of bytes
+                                                          byteIndex += 1
 
-                                   PictureBox2.Image = processedImage
+                                                      Next
+                                                  Next
+
+                                              Else
+
+
+                                                  Dim byteIndex As Integer = 0
+                                                  For x As Integer = 0 To originalImage.Width - 1
+                                                      For y As Integer = 0 To originalImage.Height - 1
+
+                                                          Dim originalColor As Color = originalImage.GetPixel(x, y)
+
+                                                          Dim processedColor As Color = Color.FromArgb(
+                                      originalColor.R Xor Fsk(byteIndex),
+                                      originalColor.G Xor Fsk(byteIndex + 1),
+                                      originalColor.B Xor Fsk(byteIndex + 2)
+                                            )
+
+                                                          ' Set the processed pixel color in the new image
+                                                          processedImage.SetPixel(x, y, processedColor)
+                                                          byteIndex += 3
+                                                      Next
+                                                  Next
+                                              End If
+                                              Fsk.Clear()
+
+                                              PictureBox2.Image = processedImage
+                                              stopwatch.Stop()
+                                              elapsedTime = stopwatch.Elapsed
+
+                                          End Sub)
+
 
                                End Sub)
+                Label1.Text = " Encryption Time: " & elapsedTime.ToString()
                 Load_image.Enabled = True
                 Generate_Keys.Enabled = True
                 Encrypt.Enabled = True
                 Decrypt.Enabled = True
                 Back.Enabled = True
-                Stats.Enabled = True
+
                 SystemSounds.Exclamation.Play()
                 Label6.Text = "Encrypted"
 
                 SaveImage(processedImage)
-
-
             Else
                 MessageBox.Show("Please load an image first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
@@ -134,10 +182,10 @@ Public Class Form4
             Encrypt.Enabled = False
             Decrypt.Enabled = False
             Back.Enabled = False
-            Stats.Enabled = False
+
             Await Task.Run(Sub()
 
-                               Dim desiredLength As Integer = processedImage.Width * processedImage.Height * 3
+
 
                                decryptedImage = New Bitmap(processedImage.Width, processedImage.Height)
                                decryptedImage.SetResolution(originalImage.HorizontalResolution, originalImage.VerticalResolution)
@@ -155,9 +203,9 @@ Public Class Form4
                                        End If
                                        Fsk.Add(byteValue)
                                    Next
-                                   Dim progressPercentage As Integer = (Fsk.Count / desiredLength) * 100
+
                                    Invoke(Sub()
-                                              Label7.Text = $"Decrypting... {progressPercentage}%"
+                                              Label7.Text = $"Decrypting... "
                                           End Sub)
                                    ' Stop processing if Fsk has reached the desired length
                                    If Fsk.Count >= desiredLength Then
@@ -165,32 +213,60 @@ Public Class Form4
                                    End If
                                Next
 
-                               ' Decrypt each pixel using XOR with the decrypted bytes
-                               For x As Integer = 0 To processedImage.Width - 1
-                                   For y As Integer = 0 To processedImage.Height - 1
 
-                                       Dim processedColor As Color = processedImage.GetPixel(x, y)
+                               Invoke(Sub()
+                                          If ComboBox1.SelectedIndex = 1 Then
+                                              ' Decrypt each pixel using XOR with the decrypted bytes
+                                              For x As Integer = 0 To processedImage.Width - 1
+                                                  For y As Integer = 0 To processedImage.Height - 1
+
+                                                      Dim processedColor As Color = processedImage.GetPixel(x, y)
 
 
 
-                                       ' XOR each color channel with the corresponding byte from the decrypted array
-                                       Dim decryptedColor As Color = Color.FromArgb(
+                                                      ' XOR each color channel with the corresponding byte from the decrypted array
+                                                      Dim decryptedColor As Color = Color.FromArgb(
+                            processedColor.R Xor Fsk(byteIndex),
+                            processedColor.G Xor Fsk(byteIndex),
+                            processedColor.B Xor Fsk(byteIndex)
+                        )
+
+                                                      ' Set the decrypted pixel color in the new image
+                                                      decryptedImage.SetPixel(x, y, decryptedColor)
+
+                                                      ' Move to the next set of bytes
+                                                      byteIndex += 1
+                                                  Next
+                                              Next
+                                          Else
+
+                                              ' Decrypt each pixel using XOR with the decrypted bytes
+                                              For x As Integer = 0 To processedImage.Width - 1
+                                                  For y As Integer = 0 To processedImage.Height - 1
+
+                                                      Dim processedColor As Color = processedImage.GetPixel(x, y)
+
+
+
+                                                      ' XOR each color channel with the corresponding byte from the decrypted array
+                                                      Dim decryptedColor As Color = Color.FromArgb(
                             processedColor.R Xor Fsk(byteIndex),
                             processedColor.G Xor Fsk(byteIndex + 1),
                             processedColor.B Xor Fsk(byteIndex + 2)
                         )
 
-                                       ' Set the decrypted pixel color in the new image
-                                       decryptedImage.SetPixel(x, y, decryptedColor)
+                                                      ' Set the decrypted pixel color in the new image
+                                                      decryptedImage.SetPixel(x, y, decryptedColor)
 
-                                       ' Move to the next set of bytes
-                                       byteIndex += 3
-                                   Next
-                               Next
-                               Fsk.Clear()
-
-                               PictureBox3.Image = decryptedImage
-
+                                                      ' Move to the next set of bytes
+                                                      byteIndex += 3
+                                                  Next
+                                              Next
+                                          End If
+                                          Fsk.Clear()
+                                          Bp.Clear()
+                                          PictureBox3.Image = decryptedImage
+                                      End Sub)
                            End Sub)
             SystemSounds.Exclamation.Play()
             Label7.Text = "Decrypted"
@@ -208,6 +284,38 @@ Public Class Form4
         Stats.Enabled = True
     End Sub
 
+    Private Function GenerateRandomnumber(prime As BigInteger) As BigInteger
+        ' Specify the desired bit length (1000 bits)
+        Dim bitLength As Integer = 1000
+
+        ' Calculate the number of bytes needed based on the specified bit length
+        Dim numBytes As Integer = (bitLength + 7) \ 8
+
+        ' Create a Pseudorandom Number Generator (PRNG)
+        Dim rng As New Random()
+
+        ' Generate a random byte array
+        Dim randomBytes(numBytes - 1) As Byte
+
+        ' Fill the byte array with random bytes
+        rng.NextBytes(randomBytes)
+
+        ' Ensure the generated BigInteger is within the specified bit length
+        randomBytes(randomBytes.Length - 1) = randomBytes(randomBytes.Length - 1) And 127
+        Dim randomInteger As New BigInteger(randomBytes)
+
+        ' Ensure that 1 <= randomInteger < prime - 2
+        While randomInteger <= 1 OrElse randomInteger >= prime - 2
+            ' Generate a new random byte array
+            rng.NextBytes(randomBytes)
+
+            ' Ensure the generated BigInteger is within the specified bit length
+            randomBytes(randomBytes.Length - 1) = randomBytes(randomBytes.Length - 1) And 127
+            randomInteger = New BigInteger(randomBytes)
+        End While
+
+        Return randomInteger
+    End Function
 
     Private Function GenerateRandomInteger(prime As BigInteger) As BigInteger
         ' Specify the desired bit length (1000 bits)
@@ -388,65 +496,6 @@ Public Class Form4
             MessageBox.Show("Please provide an image to save.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End If
     End Sub
-
-    Shared Function CompareHistograms(originalImage As Bitmap, encryptedImage As Bitmap) As Double
-        ' Convert images to grayscale
-        Dim originalGray As Bitmap = ConvertToGrayscale(originalImage)
-        Dim encryptedGray As Bitmap = ConvertToGrayscale(encryptedImage)
-
-        ' Calculate histograms
-        Dim originalHistogram As Integer() = CalculateHistogram(originalGray)
-        Dim encryptedHistogram As Integer() = CalculateHistogram(encryptedGray)
-
-        ' Compare histograms (you can use different metrics based on your requirements)
-        Dim similarity As Double = CalculateHistogramSimilarity(originalHistogram, encryptedHistogram)
-
-        Return similarity
-    End Function
-
-    Shared Function ConvertToGrayscale(image As Bitmap) As Bitmap
-        Dim result As New Bitmap(image.Width, image.Height)
-
-        For x As Integer = 0 To image.Width - 1
-            For y As Integer = 0 To image.Height - 1
-                Dim color As Color = image.GetPixel(x, y)
-                Dim grayValue As Integer = CInt(0.299 * color.R + 0.587 * color.G + 0.114 * color.B)
-                result.SetPixel(x, y, Color.FromArgb(grayValue, grayValue, grayValue))
-            Next
-        Next
-
-        Return result
-    End Function
-
-    Shared Function CalculateHistogram(image As Bitmap) As Integer()
-        Dim histogram(255) As Integer
-
-        For x As Integer = 0 To image.Width - 1
-            For y As Integer = 0 To image.Height - 1
-                Dim grayValue As Integer = image.GetPixel(x, y).R
-                histogram(grayValue) += 1
-            Next
-        Next
-
-        Return histogram
-    End Function
-
-    Shared Function CalculateHistogramSimilarity(originalHistogram As Integer(), encryptedHistogram As Integer()) As Double
-        ' You can use different similarity metrics here based on your requirements
-        ' One simple option is to calculate the sum of squared differences between histogram bins
-        Dim sumSquaredDifferences As Double = 0
-
-        For i As Integer = 0 To originalHistogram.Length - 1
-            sumSquaredDifferences += (originalHistogram(i) - encryptedHistogram(i)) ^ 2
-        Next
-
-        ' Normalize the similarity score
-        Dim maxPossibleDifference As Double = (255 * 255) * originalHistogram.Length
-        Dim similarity As Double = 1 - (sumSquaredDifferences / maxPossibleDifference)
-
-        Return similarity
-    End Function
-
     Private Sub Stats_Click(sender As Object, t As EventArgs) Handles Stats.Click
         Dim form3Instance As New Form3()
         If p = 0 Then
@@ -472,18 +521,72 @@ Public Class Form4
             Dim labelText5 As String = $"{bitLength4}"
             form3Instance.Label5.Text = labelText5
 
+            form3Instance.Label10.Text = CompareHistograms(originalImage, decryptedImage)
+
             ' Show Form2
             form3Instance.Show()
         End If
     End Sub
 
-    Private Sub Back_Click(sender As Object, e As EventArgs) Handles Back.Click
-        Dim form1Instance As New Form1()
-        form1Instance.Show()
-        Close()
-    End Sub
 
 
+    Shared Function CompareHistograms(originalImage As Bitmap, encryptedImage As Bitmap) As Double
+            ' Convert images to grayscale
+            Dim originalGray As Bitmap = ConvertToGrayscale(originalImage)
+            Dim encryptedGray As Bitmap = ConvertToGrayscale(encryptedImage)
+
+            ' Calculate histograms
+            Dim originalHistogram As Integer() = CalculateHistogram(originalGray)
+            Dim encryptedHistogram As Integer() = CalculateHistogram(encryptedGray)
+
+            ' Compare histograms (you can use different metrics based on your requirements)
+            Dim similarity As Double = CalculateHistogramSimilarity(originalHistogram, encryptedHistogram)
+        Dim Similarity2 As String = similarity.ToString("0.#####")
+        Return Similarity2
+    End Function
+
+        Shared Function ConvertToGrayscale(image As Bitmap) As Bitmap
+            Dim result As New Bitmap(image.Width, image.Height)
+
+            For x As Integer = 0 To image.Width - 1
+                For y As Integer = 0 To image.Height - 1
+                    Dim color As Color = image.GetPixel(x, y)
+                    Dim grayValue As Integer = CInt(0.299 * color.R + 0.587 * color.G + 0.114 * color.B)
+                    result.SetPixel(x, y, Color.FromArgb(grayValue, grayValue, grayValue))
+                Next
+            Next
+
+            Return result
+        End Function
+
+        Shared Function CalculateHistogram(image As Bitmap) As Integer()
+            Dim histogram(255) As Integer
+
+            For x As Integer = 0 To image.Width - 1
+                For y As Integer = 0 To image.Height - 1
+                    Dim grayValue As Integer = image.GetPixel(x, y).R
+                    histogram(grayValue) += 1
+                Next
+            Next
+
+            Return histogram
+        End Function
+
+        Shared Function CalculateHistogramSimilarity(originalHistogram As Integer(), encryptedHistogram As Integer()) As Double
+            ' You can use different similarity metrics here based on your requirements
+            ' One simple option is to calculate the sum of squared differences between histogram bins
+            Dim sumSquaredDifferences As Double = 0
+
+            For i As Integer = 0 To originalHistogram.Length - 1
+                sumSquaredDifferences += (originalHistogram(i) - encryptedHistogram(i)) ^ 2
+            Next
+
+            ' Normalize the similarity score
+            Dim maxPossibleDifference As Double = (255 * 255) * originalHistogram.Length
+            Dim similarity As Double = 1 - (sumSquaredDifferences / maxPossibleDifference)
+
+            Return similarity
+        End Function
 
     Public ReadOnly Property Prime As BigInteger
         Get
@@ -507,4 +610,10 @@ Public Class Form4
             Return e ' Replace this with your actual variable
         End Get
     End Property
+
+    Private Sub Back_Click(sender As Object, e As EventArgs) Handles Back.Click
+        Dim form1Instance As New Form1()
+        form1Instance.Show()
+        Close()
+    End Sub
 End Class

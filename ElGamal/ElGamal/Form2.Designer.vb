@@ -25,109 +25,119 @@ Partial Class Form2
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Form2))
         Encrypt = New Button()
         decrypt = New Button()
-        plain_text = New TextBox()
-        cipher_text = New TextBox()
-        decrypted_text = New TextBox()
         Back = New Button()
-        Label1 = New Label()
         Stats = New Button()
         Generate_Keys = New Button()
+        load_image = New Button()
+        PictureBox1 = New PictureBox()
+        PictureBox2 = New PictureBox()
+        PictureBox3 = New PictureBox()
+        ComboBox1 = New ComboBox()
+        CType(PictureBox1, ComponentModel.ISupportInitialize).BeginInit()
+        CType(PictureBox2, ComponentModel.ISupportInitialize).BeginInit()
+        CType(PictureBox3, ComponentModel.ISupportInitialize).BeginInit()
         SuspendLayout()
         ' 
         ' Encrypt
         ' 
-        Encrypt.BackColor = SystemColors.ButtonFace
-        Encrypt.Location = New Point(85, 284)
+        Encrypt.BackColor = SystemColors.ButtonHighlight
+        Encrypt.Location = New Point(79, 361)
         Encrypt.Name = "Encrypt"
-        Encrypt.Size = New Size(75, 30)
+        Encrypt.Size = New Size(82, 23)
         Encrypt.TabIndex = 0
         Encrypt.Text = "Encrypt"
         Encrypt.UseVisualStyleBackColor = False
         ' 
         ' decrypt
         ' 
-        decrypt.BackColor = SystemColors.ButtonFace
-        decrypt.Location = New Point(524, 284)
+        decrypt.BackColor = SystemColors.ButtonHighlight
+        decrypt.Location = New Point(524, 325)
         decrypt.Name = "decrypt"
-        decrypt.Size = New Size(75, 30)
+        decrypt.Size = New Size(82, 23)
         decrypt.TabIndex = 1
         decrypt.Text = "decrypt"
         decrypt.UseVisualStyleBackColor = False
         ' 
-        ' plain_text
-        ' 
-        plain_text.BorderStyle = BorderStyle.FixedSingle
-        plain_text.Cursor = Cursors.IBeam
-        plain_text.Location = New Point(48, 184)
-        plain_text.Multiline = True
-        plain_text.Name = "plain_text"
-        plain_text.Size = New Size(144, 94)
-        plain_text.TabIndex = 2
-        ' 
-        ' cipher_text
-        ' 
-        cipher_text.BackColor = SystemColors.Window
-        cipher_text.BorderStyle = BorderStyle.FixedSingle
-        cipher_text.CausesValidation = False
-        cipher_text.Cursor = Cursors.No
-        cipher_text.Location = New Point(276, 96)
-        cipher_text.Multiline = True
-        cipher_text.Name = "cipher_text"
-        cipher_text.ReadOnly = True
-        cipher_text.ShortcutsEnabled = False
-        cipher_text.Size = New Size(144, 94)
-        cipher_text.TabIndex = 3
-        ' 
-        ' decrypted_text
-        ' 
-        decrypted_text.BackColor = SystemColors.Window
-        decrypted_text.BorderStyle = BorderStyle.FixedSingle
-        decrypted_text.Cursor = Cursors.No
-        decrypted_text.Location = New Point(490, 184)
-        decrypted_text.Multiline = True
-        decrypted_text.Name = "decrypted_text"
-        decrypted_text.ReadOnly = True
-        decrypted_text.Size = New Size(144, 94)
-        decrypted_text.TabIndex = 4
-        ' 
         ' Back
         ' 
-        Back.BackColor = SystemColors.ButtonFace
-        Back.Location = New Point(12, 12)
+        Back.BackColor = SystemColors.ButtonHighlight
+        Back.Location = New Point(12, 11)
         Back.Name = "Back"
         Back.Size = New Size(70, 23)
         Back.TabIndex = 5
         Back.Text = "Back"
         Back.UseVisualStyleBackColor = False
         ' 
-        ' Label1
-        ' 
-        Label1.AutoSize = True
-        Label1.Font = New Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
-        Label1.Location = New Point(276, 76)
-        Label1.Name = "Label1"
-        Label1.Size = New Size(67, 17)
-        Label1.TabIndex = 6
-        Label1.Text = "Ciphertext"
-        ' 
         ' Stats
         ' 
-        Stats.BackColor = SystemColors.ButtonFace
-        Stats.Location = New Point(617, 368)
+        Stats.BackColor = SystemColors.ButtonHighlight
+        Stats.Location = New Point(614, 368)
         Stats.Name = "Stats"
-        Stats.Size = New Size(72, 23)
+        Stats.Size = New Size(75, 23)
         Stats.TabIndex = 7
-        Stats.Text = "Stats"
+        Stats.Text = "Info"
         Stats.UseVisualStyleBackColor = False
         ' 
         ' Generate_Keys
         ' 
-        Generate_Keys.Location = New Point(515, 12)
+        Generate_Keys.BackColor = SystemColors.ButtonHighlight
+        Generate_Keys.Location = New Point(513, 12)
         Generate_Keys.Name = "Generate_Keys"
         Generate_Keys.Size = New Size(102, 23)
         Generate_Keys.TabIndex = 8
         Generate_Keys.Text = "Generate Keys"
-        Generate_Keys.UseVisualStyleBackColor = True
+        Generate_Keys.UseVisualStyleBackColor = False
+        ' 
+        ' load_image
+        ' 
+        load_image.BackColor = SystemColors.ButtonHighlight
+        load_image.Location = New Point(79, 325)
+        load_image.Name = "load_image"
+        load_image.Size = New Size(82, 30)
+        load_image.TabIndex = 9
+        load_image.Text = "Load image"
+        load_image.UseVisualStyleBackColor = False
+        ' 
+        ' PictureBox1
+        ' 
+        PictureBox1.Image = CType(resources.GetObject("PictureBox1.Image"), Image)
+        PictureBox1.Location = New Point(40, 186)
+        PictureBox1.Name = "PictureBox1"
+        PictureBox1.Size = New Size(156, 133)
+        PictureBox1.SizeMode = PictureBoxSizeMode.StretchImage
+        PictureBox1.TabIndex = 10
+        PictureBox1.TabStop = False
+        ' 
+        ' PictureBox2
+        ' 
+        PictureBox2.BackgroundImage = CType(resources.GetObject("PictureBox2.BackgroundImage"), Image)
+        PictureBox2.Image = CType(resources.GetObject("PictureBox2.Image"), Image)
+        PictureBox2.Location = New Point(271, 50)
+        PictureBox2.Name = "PictureBox2"
+        PictureBox2.Size = New Size(156, 133)
+        PictureBox2.SizeMode = PictureBoxSizeMode.StretchImage
+        PictureBox2.TabIndex = 11
+        PictureBox2.TabStop = False
+        ' 
+        ' PictureBox3
+        ' 
+        PictureBox3.Image = CType(resources.GetObject("PictureBox3.Image"), Image)
+        PictureBox3.Location = New Point(482, 186)
+        PictureBox3.Name = "PictureBox3"
+        PictureBox3.Size = New Size(156, 133)
+        PictureBox3.SizeMode = PictureBoxSizeMode.StretchImage
+        PictureBox3.TabIndex = 12
+        PictureBox3.TabStop = False
+        ' 
+        ' ComboBox1
+        ' 
+        ComboBox1.FormattingEnabled = True
+        ComboBox1.Items.AddRange(New Object() {"257", "353", "443", "4231"})
+        ComboBox1.Location = New Point(271, 11)
+        ComboBox1.Name = "ComboBox1"
+        ComboBox1.Size = New Size(156, 23)
+        ComboBox1.TabIndex = 13
+        ComboBox1.Text = "Select a prime number"
         ' 
         ' Form2
         ' 
@@ -138,13 +148,14 @@ Partial Class Form2
         BackgroundImageLayout = ImageLayout.Stretch
         CausesValidation = False
         ClientSize = New Size(701, 403)
+        Controls.Add(ComboBox1)
+        Controls.Add(PictureBox3)
+        Controls.Add(PictureBox2)
+        Controls.Add(PictureBox1)
+        Controls.Add(load_image)
         Controls.Add(Generate_Keys)
         Controls.Add(Stats)
-        Controls.Add(Label1)
-        Controls.Add(plain_text)
         Controls.Add(Back)
-        Controls.Add(decrypted_text)
-        Controls.Add(cipher_text)
         Controls.Add(decrypt)
         Controls.Add(Encrypt)
         FormBorderStyle = FormBorderStyle.FixedSingle
@@ -154,17 +165,20 @@ Partial Class Form2
         Name = "Form2"
         StartPosition = FormStartPosition.CenterScreen
         Text = "Original ElGamal"
+        CType(PictureBox1, ComponentModel.ISupportInitialize).EndInit()
+        CType(PictureBox2, ComponentModel.ISupportInitialize).EndInit()
+        CType(PictureBox3, ComponentModel.ISupportInitialize).EndInit()
         ResumeLayout(False)
-        PerformLayout()
     End Sub
 
     Friend WithEvents Encrypt As Button
     Friend WithEvents decrypt As Button
-    Friend WithEvents plain_text As TextBox
-    Friend WithEvents cipher_text As TextBox
-    Friend WithEvents decrypted_text As TextBox
     Friend WithEvents Back As Button
-    Friend WithEvents Label1 As Label
     Friend WithEvents Stats As Button
     Friend WithEvents Generate_Keys As Button
+    Friend WithEvents load_image As Button
+    Friend WithEvents PictureBox1 As PictureBox
+    Friend WithEvents PictureBox2 As PictureBox
+    Friend WithEvents PictureBox3 As PictureBox
+    Friend WithEvents ComboBox1 As ComboBox
 End Class

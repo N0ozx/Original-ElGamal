@@ -2,103 +2,106 @@
 Imports System.IO
 Imports System.Security.Cryptography
 Imports System.Media
+Imports System.Security.Cryptography.Xml
+Imports Windows.Win32.UI.Input
+Imports System.Windows.Forms.VisualStyles.VisualStyleElement
 
 Public Class Form2
-    Dim e, p, g, privateKey As BigInteger
-    Dim plainText As String
-    Dim ciphertext As New List(Of BigInteger)
-    Dim bp As New List(Of BigInteger)
+    Private originalImage As Bitmap
+    Private processedImage As Bitmap
+    Private decryptedImage As Bitmap
+    '//////////////////////////////////////////////
+    Private e, p, g, privateKey As BigInteger
+    Private Bp As New List(Of BigInteger)()
     Private Sub GenerateKeys(sender As Object, t As EventArgs) Handles Generate_Keys.Click
-        Dim primeString = GeneratePrime()
-        p = BigInteger.Parse(primeString)
 
-        g = 2
-        'primitive_root.Text = g.ToString()
+        p = Convert.ToInt32(ComboBox1.SelectedItem)
+        If p = 0 Then
+            MessageBox.Show("Please select a prime number", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Else
+            g = 2
 
-        privateKey = GeneratePrivateKey(p)
 
-        'Calculate the public key
-        e = BigInteger.ModPow(g, privateKey, p)
-        SystemSounds.Exclamation.Play()
+            privateKey = 17
+
+            e = BigInteger.ModPow(g, privateKey, p)
+            SystemSounds.Exclamation.Play()
+        End If
+    End Sub
+
+    Private Sub Load_image_Click(sender As Object, e As EventArgs) Handles load_image.Click
+        Dim openFileDialog As New OpenFileDialog With {
+          .Filter = "Image|*.bmp;*.jpg;*.png;*.gif;*.tif|All files|*.*"
+      }
+
+        If openFileDialog.ShowDialog() = DialogResult.OK Then
+            Dim filePath As String = openFileDialog.FileName
+            originalImage = New Bitmap(filePath)
+            PictureBox1.Image = originalImage
+
+
+        End If
     End Sub
     Private Sub Encrypt_(sender As Object, t As EventArgs) Handles Encrypt.Click
         If p = 0 Then
             MessageBox.Show("Please Generate Keys First", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Else
 
-            plainText = plain_text.Text
-            If plainText = "" Then
-                MessageBox.Show("type anything first", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            processedImage = New Bitmap(originalImage.Width, originalImage.Height)
+            processedImage.SetResolution(originalImage.HorizontalResolution, originalImage.VerticalResolution)
 
-            Else
-                'Convert the plaintext to ASCII values
-                Dim asciiValues As New List(Of BigInteger)
-                For Each c In plainText
-                    asciiValues.Add(BigInteger.Parse(AscW(c).ToString))
-                Next
+            ' Encrypt the image pixel by pixel
+            For y As Integer = 0 To originalImage.Height - 1
+                For x As Integer = 0 To originalImage.Width - 1
+                    Dim pixel As Color = originalImage.GetPixel(x, y)
 
-                Dim display_ciphertext As New List(Of BigInteger)
-                Dim index = 0
-                Do While bp.Count < Len(plainText)
-                    If bp.Count = Len(plainText) Then
-                        Exit Do
-                    End If
-
-                    Dim randomInteger = GenerateRandomInteger(p)
+                    Dim randomInteger As BigInteger = GenerateRandomInteger(p)
+                    Dim sk As BigInteger = BigInteger.ModPow(e, randomInteger, p)
                     Dim c1 = BigInteger.ModPow(g, randomInteger, p)
-                    bp.Add(c1)
+                    Bp.Add(c1)
+                    ' Calculate c2 for each channel
 
-                    Dim sk = BigInteger.ModPow(e, randomInteger, p)
+                    Dim c2_R As BigInteger = ((sk * pixel.R) Mod p) Mod 255
+                    Dim c2_G As BigInteger = ((sk * pixel.G) Mod p) Mod 255
+                    Dim c2_B As BigInteger = ((sk * pixel.B) Mod p) Mod 255
 
-                    Dim c2 = asciiValues(index) * sk Mod p
-
-                    ciphertext.Add(c2)
-                    display_ciphertext.Add(c2 Mod 65536)
-
-                    index += 1
-
-                Loop
-                Dim encryptedString = ""
-                For Each value In display_ciphertext
-                    encryptedString &= ChrW(BigInteger.Parse(value.ToString))
+                    ' Set the encrypted pixel using the combined values
+                    processedImage.SetPixel(x, y, Color.FromArgb(c2_R, c2_G, c2_B))
                 Next
-                display_ciphertext.Clear()
-                ' Display the encrypted string
-                cipher_text.Text = encryptedString
-            End If
+            Next
+            PictureBox2.Image = processedImage
         End If
     End Sub
 
     Private Sub Decrypt_(sender As Object, e As EventArgs) Handles decrypt.Click
+        Dim inverse As New List(Of BigInteger)
 
-        If plainText = "" Then
-            MessageBox.Show("Encrypt something first", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-
-        Else
-            Dim Index = 0
-            Dim decryptedAsciiValues As New List(Of BigInteger)
-            For Each c1 In bp
-
-                Dim sk = BigInteger.ModPow(c1, privateKey, p)
-
-                Dim inversec1equa = ModInverse(sk, p)
-
-                Dim asciiValue = ciphertext(Index) * inversec1equa Mod p
-
-                decryptedAsciiValues.Add(asciiValue)
-
-                Index += 1
+        Dim decryptedAsciiValues As New List(Of BigInteger)
+        For Each c1 In Bp
+            Dim sk = BigInteger.ModPow(c1, privateKey, p)
+            Dim inverse_val As BigInteger = ModInverse(sk, p)
+            inverse.Add(inverse_val)
             Next
+            Dim index As Integer = 0
 
-            Dim decryptedString = ""
-            For Each asciiValue In decryptedAsciiValues
-                decryptedString &= ChrW(BigInteger.Parse(asciiValue.ToString))
+        decryptedImage = New Bitmap(processedImage.Width, processedImage.Height)
+        For y As Integer = 0 To processedImage.Height - 1
+            For x As Integer = 0 To processedImage.Width - 1
+                Dim encryptedPixel As Color = processedImage.GetPixel(x, y)
+
+
+                Dim original_R As BigInteger = (encryptedPixel.R * inverse(index) Mod p) Mod 255
+                Dim original_G As BigInteger = (encryptedPixel.G * inverse(index) Mod p) Mod 255
+                Dim original_B As BigInteger = (encryptedPixel.B * inverse(index) Mod p) Mod 255
+
+                index += 1
+
+
+                decryptedImage.SetPixel(x, y, Color.FromArgb(original_R, original_G, original_B))
             Next
+        Next
+        PictureBox3.Image = decryptedImage
 
-            ciphertext.Clear()
-            bp.Clear()
-            decrypted_text.Text = decryptedString
-        End If
     End Sub
     Private Function ModInverse(a As BigInteger, m As BigInteger) As BigInteger
         Dim m0 = m
@@ -126,7 +129,7 @@ Public Class Form2
 
     Private Function GenerateRandomInteger(prime As BigInteger) As BigInteger
         ' Specify the desired bit length (1000 bits)
-        Dim bitLength As Integer = 1000
+        Dim bitLength As Integer = 6
 
         ' Calculate the number of bytes needed based on the specified bit length
         Dim numBytes As Integer = (bitLength + 7) \ 8
@@ -191,29 +194,6 @@ Public Class Form2
             Return privateKey
         End Using
     End Function
-    Private Function GeneratePrime() As String
-        Dim process As New Process()
-        process.StartInfo.FileName = "cmd.exe"
-        process.StartInfo.UseShellExecute = False
-        process.StartInfo.RedirectStandardInput = True
-        process.StartInfo.RedirectStandardOutput = True
-        process.Start()
-
-        Dim streamWriter As StreamWriter = process.StandardInput
-        Dim streamReader As StreamReader = process.StandardOutput
-        streamWriter.WriteLine("openssl prime -generate -bits 1024")
-        streamWriter.WriteLine("exit")
-
-        Dim result As String = streamReader.ReadToEnd()
-        Dim lines As String() = result.Split(New String() {Environment.NewLine}, StringSplitOptions.None)
-        For Each line As String In lines
-            If line.Length > 0 AndAlso Char.IsDigit(line(0)) Then
-                Return line
-            End If
-        Next
-
-        Return Nothing
-    End Function
 
     Private Sub Back_Click(sender As Object, e As EventArgs) Handles Back.Click
         Dim form1Instance As New Form1()
@@ -246,10 +226,136 @@ Public Class Form2
             Dim labelText5 As String = $"{bitLength4}"
             form3Instance.Label5.Text = labelText5
 
+            form3Instance.Label10.Text = CompareHistograms(originalImage, decryptedImage)
             ' Show Form2
             form3Instance.Show()
         End If
     End Sub
+
+    Shared Function CompareHistograms(originalImage As Bitmap, encryptedImage As Bitmap) As Double
+        ' Convert images to grayscale
+        Dim originalGray As Bitmap = ConvertToGrayscale(originalImage)
+        Dim encryptedGray As Bitmap = ConvertToGrayscale(encryptedImage)
+
+        ' Calculate histograms
+        Dim originalHistogram As Integer() = CalculateHistogram(originalGray)
+        Dim encryptedHistogram As Integer() = CalculateHistogram(encryptedGray)
+
+        ' Compare histograms (you can use different metrics based on your requirements)
+        Dim similarity As Double = CalculateHistogramSimilarity(originalHistogram, encryptedHistogram)
+        Dim Similarity2 As String = similarity.ToString("0.#####")
+        Return Similarity2
+    End Function
+
+    Shared Function ConvertToGrayscale(image As Bitmap) As Bitmap
+        Dim result As New Bitmap(image.Width, image.Height)
+
+        For x As Integer = 0 To image.Width - 1
+            For y As Integer = 0 To image.Height - 1
+                Dim color As Color = image.GetPixel(x, y)
+                Dim grayValue As Integer = CInt(0.299 * color.R + 0.587 * color.G + 0.114 * color.B)
+                result.SetPixel(x, y, Color.FromArgb(grayValue, grayValue, grayValue))
+            Next
+        Next
+
+        Return result
+    End Function
+
+    Shared Function CalculateHistogram(image As Bitmap) As Integer()
+        Dim histogram(255) As Integer
+
+        For x As Integer = 0 To image.Width - 1
+            For y As Integer = 0 To image.Height - 1
+                Dim grayValue As Integer = image.GetPixel(x, y).R
+                histogram(grayValue) += 1
+            Next
+        Next
+
+        Return histogram
+    End Function
+
+    Shared Function CalculateHistogramSimilarity(originalHistogram As Integer(), encryptedHistogram As Integer()) As Double
+        ' You can use different similarity metrics here based on your requirements
+        ' One simple option is to calculate the sum of squared differences between histogram bins
+        Dim sumSquaredDifferences As Double = 0
+
+        For i As Integer = 0 To originalHistogram.Length - 1
+            sumSquaredDifferences += (originalHistogram(i) - encryptedHistogram(i)) ^ 2
+        Next
+
+        ' Normalize the similarity score
+        Dim maxPossibleDifference As Double = (255 * 255) * originalHistogram.Length
+        Dim similarity As Double = 1 - (sumSquaredDifferences / maxPossibleDifference)
+
+        Return similarity
+    End Function
+
+    Private Sub PictureBox1_Click(sender As Object, e As EventArgs) Handles PictureBox1.Click
+        If originalImage IsNot Nothing Then
+            ' Open a new form for inspecting the image
+            Dim inspectForm As New Form With {
+                .Text = "Image Inspection",
+                .Width = originalImage.Width + 20,
+                .Height = originalImage.Height + 40
+            }
+
+            Dim pictureBoxInspect As New PictureBox With {
+                .SizeMode = PictureBoxSizeMode.Zoom,
+                .Dock = DockStyle.Fill,
+                .Image = originalImage
+            }
+
+            inspectForm.Controls.Add(pictureBoxInspect)
+            inspectForm.ShowDialog()
+        Else
+            MessageBox.Show("Please load an image first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
+    End Sub
+
+    Private Sub PictureBox2_Click(sender As Object, e As EventArgs) Handles PictureBox2.Click
+        If processedImage IsNot Nothing Then
+            ' Open a new form for inspecting the image
+            Dim inspectForm As New Form With {
+                .Text = "Image Inspection",
+                .Width = processedImage.Width + 20,
+                .Height = processedImage.Height + 40
+            }
+
+            Dim pictureBoxInspect As New PictureBox With {
+                .SizeMode = PictureBoxSizeMode.Zoom,
+                .Dock = DockStyle.Fill,
+                .Image = processedImage
+            }
+
+            inspectForm.Controls.Add(pictureBoxInspect)
+            inspectForm.ShowDialog()
+        Else
+            MessageBox.Show("Please load an image first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
+    End Sub
+
+    Private Sub PictureBox3_Click(sender As Object, e As EventArgs) Handles PictureBox3.Click
+        If decryptedImage IsNot Nothing Then
+            ' Open a new form for inspecting the image
+            Dim inspectForm As New Form With {
+                .Text = "Image Inspection",
+                .Width = decryptedImage.Width + 20,
+                .Height = decryptedImage.Height + 40
+            }
+
+            Dim pictureBoxInspect As New PictureBox With {
+                .SizeMode = PictureBoxSizeMode.Zoom,
+                .Dock = DockStyle.Fill,
+                .Image = decryptedImage
+            }
+
+            inspectForm.Controls.Add(pictureBoxInspect)
+            inspectForm.ShowDialog()
+        Else
+            MessageBox.Show("Please load an image first.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
+    End Sub
+
 
 
     Public ReadOnly Property Prime As BigInteger
